@@ -21,9 +21,12 @@ import io.appium.java_client.MobileElement;
 import io.appium.java_client.pagefactory.AndroidFindBy;
 import io.appium.java_client.pagefactory.AppiumFieldDecorator;
 import org.apache.commons.io.FileUtils;
+import org.openqa.selenium.By;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 import java.io.File;
@@ -39,34 +42,53 @@ public abstract class BasePage {
     private static final int XML_REFRESH_DELAY = 1000;
     String destDir;
 
-
     /**
      * The driver
      */
-    protected final AppiumDriver driver;
+    protected final RemoteWebDriver driver;
 
-    @AndroidFindBy(xpath = "//android.webkit.WebView[@index=0]/android.view.View[@index='0']")
-    private MobileElement topToolBar;
+    public WebElement homeButton;
 
+    public WebElement ownerButton;
 
-    protected BasePage(AppiumDriver driver){
+    public WebElement veternarianButton;
+
+    public WebElement petType;
+
+    public WebElement specialtiesButton;
+
+    public WebElement getHomeButton(){
+        return    driver.findElement(By.xpath("//a[@title='home page']//span[contains(@class,'glyphicon')]"));
+    }
+
+    public WebElement getOwnerButton(){
+        return driver.findElement(By.xpath("(//a[@class='dropdown-toggle'])[1]"));
+    }
+
+    public WebElement getVeternarianButton(){
+        return driver.findElement(By.xpath("(//a[@class='dropdown-toggle'])[2]"));
+    }
+
+    public WebElement getPetType(){
+        return driver.findElement(By.xpath("//a[@title='pettypes']"));
+    }
+
+    public WebElement getSpecialtiesButton(){
+        return driver.findElement(By.xpath("//a[@title='specialties']"));
+    }
+
+    protected BasePage(RemoteWebDriver driver){
         this.driver = driver;
-        PageFactory.initElements(new AppiumFieldDecorator(driver, 5, TimeUnit.SECONDS), this);
-    }
-
-    public MobileElement getDropDownFromTopToolBar(){
-        return topToolBar.findElementByXPath("//android.widget.Button[@index='0']");
-    }
-
-    public MobileElement getHomeFromTopToolBar(){
-        return topToolBar.findElementByXPath("//android.view.View[@index='2']//android.view.View[@index='0']");
-    }
-
-    public MobileElement getShipWreckFromTopToolBar(){
-        return topToolBar.findElementByXPath("//android.view.View[@index='2']//android.view.View[@index='1']");
     }
 
 
+    public void clickOnHome(){
+        getHomeButton().click();
+    }
+
+    public String getCurrentURL(){
+        return driver.getCurrentUrl();
+    }
     protected boolean sendKeysToElement(String input, WebElement element, boolean appendNewLine) throws InterruptedException {
         final int MAX_ATTEMPTS = 3;
         int attempts = 0;
@@ -87,23 +109,9 @@ public abstract class BasePage {
         return element.getText().contains(input);
     }
 
-    public void takeScreenShot() {
-        // Set folder name to store screenshots.
-        destDir = System.getProperty("user.dir")+"/screenshot";
-        // Capture screenshot.
-        File scrFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-        // Set date format to set It as screenshot file name.
-        DateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy__hh_mm_ssaa");
-        // Create folder under project with name "screenshots" provided to destDir.
-        new File(destDir).mkdirs();
-        // Set file name using current date time.
-        String destFile = dateFormat.format(new Date()) + ".png";
-
-        try {
-            // Copy paste file at destination folder location
-            FileUtils.copyFile(scrFile, new File(destDir + "/" + destFile));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public boolean takeScreenShot(final String name) {
+        String screenshotDirectory = System.getProperty("appium.screenshots.dir", System.getProperty("java.io.tmpdir", ""));
+        File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+        return screenshot.renameTo(new File(screenshotDirectory, String.format("%s.png", name)));
     }
 }
